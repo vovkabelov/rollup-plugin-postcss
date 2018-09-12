@@ -1,6 +1,6 @@
 {
   "name": "rollup-plugin-postcss-independed",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "Seamless integration between Rollup and PostCSS. Adapted for use in NPM packages installed globally",
   "main": "dist/rollup-plugin-postcss-independed.cjs.js",
   "files": [

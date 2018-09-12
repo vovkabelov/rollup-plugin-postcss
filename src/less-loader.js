@@ -15,7 +15,7 @@ export default {
 
     if (map) {
       map = JSON.parse(map);
-      map.sources = map.sources.map(source => humanlizePath(source));
+      map.sources = map.sources.map(source => humanlizePath(source))
     }
 
     return {

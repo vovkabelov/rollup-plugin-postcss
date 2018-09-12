@@ -1,4 +1,5 @@
 import path from 'path'
+import importCwd from 'import-cwd'
 import postcss from 'postcss'
 import findPostcssConfig from 'postcss-load-config'
 import reserved from 'reserved-words'
@@ -47,7 +48,7 @@ function ensureClassName(name) {
 }
 
 function ensurePostCSSOption(option) {
-  return typeof option === 'string' ? require(option) : option
+  return typeof option === 'string' ? importCwd(option) : option
 }
 
 function isModuleFile(file) {

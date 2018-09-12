@@ -1,6 +1,7 @@
 import path from 'path'
 import pify from 'pify'
 import resolve from 'resolve'
+import importCwd from 'import-cwd'
 import PQueue from 'p-queue'
 
 // This queue makes sure node-sass leaves one thread available for executing fs tasks
@@ -22,11 +23,12 @@ export default {
   test: /\.s[ac]ss$/,
   async process({ code }) {
     const sass = require('node-sass');
+    const tmpOpts = this.options;
 
     return new Promise((resolve, reject) => {
       workQueue.add(() =>
         pify(sass.render.bind(sass))({
-          ...this.options,
+          ...tmpOpts,
           file: this.id,
           data: code,
           indentedSyntax: /\.sass$/.test(this.id),
