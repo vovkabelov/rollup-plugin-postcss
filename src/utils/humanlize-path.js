@@ -1,6 +1,6 @@
 import path from 'path'
 
 const humanlizePath = filepath => path.relative(process.cwd(),
-filepath)
+filepath);
 
 export default humanlizePath

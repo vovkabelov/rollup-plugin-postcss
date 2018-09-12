@@ -2,6 +2,7 @@ import path from 'path'
 import queryString from 'querystring'
 import fs from 'fs-extra'
 import { createFilter } from 'rollup-pluginutils'
+// noinspection ES6CheckImport
 import Concat from 'concat-with-sourcemaps'
 import Loaders from './loaders'
 import humanlizePath from './utils/humanlize-path'
@@ -12,12 +13,12 @@ import humanlizePath from './utils/humanlize-path'
  * Otherwise fallback to default value
  */
 function inferOption(option, defaultValue) {
-  if (option === false) return false
-  if (option && typeof option === 'object') return option
+  if (option === false) return false;
+  if (option && typeof option === 'object') return option;
   return option ? {} : defaultValue
 }
 
-const QUERY_REGEXP = /\?(.+)$/
+const QUERY_REGEXP = /\?(.+)$/;
 
 function hasQuery(str) {
   return QUERY_REGEXP.test(str)
@@ -32,8 +33,8 @@ function stripQuery(str) {
 }
 
 export default (options = {}) => {
-  const filter = createFilter(options.include, options.exclude)
-  const sourceMap = options.sourceMap
+  const filter = createFilter(options.include, options.exclude);
+  const sourceMap = options.sourceMap;
   const postcssLoaderOptions = {
     /** Inject CSS as `<style>` to `<head>` */
     inject: inferOption(options.inject, {}),
@@ -56,17 +57,17 @@ export default (options = {}) => {
       stringifier: options.stringifier,
       exec: options.exec
     }
-  }
-  const use = options.use || ['sass', 'stylus', 'less']
-  use.unshift(['postcss', postcssLoaderOptions])
+  };
+  const use = options.use || ['sass', 'stylus', 'less'];
+  use.unshift(['postcss', postcssLoaderOptions]);
 
   const loaders = new Loaders({
     use,
     loaders: options.loaders,
     extensions: options.extensions
-  })
+  });
 
-  const extracted = new Map()
+  const extracted = new Map();
 
   return {
     name: 'postcss',
@@ -79,12 +80,12 @@ export default (options = {}) => {
 
     async load(id) {
       if (hasQuery(id)) {
-        const { start, end, file } = parseQuery(id)
-        const bareId = stripQuery(id)
+        const { start, end, file } = parseQuery(id);
+        const bareId = stripQuery(id);
         const content = await fs.readFile(
           file ? path.resolve(path.dirname(bareId), file) : bareId,
           'utf8'
-        )
+        );
         return start && end ?
           content.slice(Number(start), Number(end)) :
           content
@@ -92,10 +93,10 @@ export default (options = {}) => {
     },
 
     async transform(code, id) {
-      let scoped
+      let scoped;
       if (hasQuery(id)) {
-        const query = parseQuery(id)
-        scoped = query.scoped
+        const query = parseQuery(id);
+        scoped = query.scoped;
         id = stripQuery(id)
       }
 
@@ -113,10 +114,10 @@ export default (options = {}) => {
         id,
         sourceMap,
         scoped
-      })
+      });
 
       if (postcssLoaderOptions.extract) {
-        extracted.set(id, res.extracted)
+        extracted.set(id, res.extracted);
         return {
           code: res.code,
           map: { mappings: '' }
@@ -130,31 +131,31 @@ export default (options = {}) => {
     },
 
     async onwrite(opts) {
-      if (extracted.size === 0) return
+      if (extracted.size === 0) return;
 
       const getExtracted = filepath => {
         if (!filepath) {
           if (typeof postcssLoaderOptions.extract === 'string') {
             filepath = postcssLoaderOptions.extract
           } else {
-            const basename = path.basename(opts.file, path.extname(opts.file))
+            const basename = path.basename(opts.file, path.extname(opts.file));
             filepath = path.join(path.dirname(opts.file), basename + '.css')
           }
         }
-        filepath = humanlizePath(filepath)
-        const concat = new Concat(true, filepath, '\n')
+        filepath = humanlizePath(filepath);
+        const concat = new Concat(true, filepath, '\n');
         for (const res of extracted.values()) {
-          const relative = humanlizePath(res.id)
-          const map = res.map || null
+          const relative = humanlizePath(res.id);
+          const map = res.map || null;
           if (map) {
-            map.file = filepath
+            map.file = filepath;
             map.sources = map.sources.map(source =>
               humanlizePath(path.join(path.dirname(opts.file), source))
             )
           }
           concat.add(relative, res.code, map)
         }
-        let code = concat.content
+        let code = concat.content;
 
         if (sourceMap === 'inline') {
           code += `\n/*# sourceMappingURL=data:application/json;base64,${Buffer.from(
@@ -171,16 +172,16 @@ export default (options = {}) => {
           codeFilePath: filepath,
           mapFilePath: filepath + '.map'
         }
-      }
+      };
 
       if (options.onExtract) {
-        const shouldExtract = await options.onExtract(getExtracted)
+        const shouldExtract = await options.onExtract(getExtracted);
         if (shouldExtract === false) {
           return
         }
       }
 
-      const { code, codeFilePath, map, mapFilePath } = getExtracted()
+      const { code, codeFilePath, map, mapFilePath } = getExtracted();
       await fs
         .ensureDir(path.dirname(codeFilePath))
         .then(() =>

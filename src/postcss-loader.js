@@ -1,5 +1,4 @@
 import path from 'path'
-import importCwd from 'import-cwd'
 import postcss from 'postcss'
 import findPostcssConfig from 'postcss-load-config'
 import reserved from 'reserved-words'
@@ -9,7 +8,7 @@ import normalizePath from './utils/normalize-path'
 
 const styleInjectPath = require
   .resolve('style-inject/dist/style-inject.es')
-  .replace(/[\\/]+/g, '/')
+  .replace(/[\\/]+/g, '/');
 
 function loadConfig(id, { ctx: configOptions, path: configPath }) {
   const handleError = err => {
@@ -18,9 +17,9 @@ function loadConfig(id, { ctx: configOptions, path: configPath }) {
     }
     // Return empty options for PostCSS
     return {}
-  }
+  };
 
-  configPath = configPath ? path.resolve(configPath) : path.dirname(id)
+  configPath = configPath ? path.resolve(configPath) : path.dirname(id);
   const ctx = {
     file: {
       extname: path.extname(id),
@@ -28,7 +27,7 @@ function loadConfig(id, { ctx: configOptions, path: configPath }) {
       basename: path.basename(id)
     },
     options: configOptions || {}
-  }
+  };
 
   return findPostcssConfig(ctx, configPath, { argv: false }).catch(handleError)
 }
@@ -40,7 +39,7 @@ function escapeClassNameDashes(str) {
 }
 
 function ensureClassName(name) {
-  name = escapeClassNameDashes(name)
+  name = escapeClassNameDashes(name);
   if (reserved.check(name)) {
     name = `$${name}$`
   }
@@ -48,7 +47,7 @@ function ensureClassName(name) {
 }
 
 function ensurePostCSSOption(option) {
-  return typeof option === 'string' ? importCwd(option) : option
+  return typeof option === 'string' ? require(option) : option
 }
 
 function isModuleFile(file) {
@@ -62,19 +61,19 @@ export default {
   async process({ code, map }) {
     const config = this.options.config ?
       await loadConfig(this.id, this.options.config) :
-      {}
+      {};
 
-    const options = this.options
+    const options = this.options;
     const plugins = [
       ...(options.postcss.plugins || []),
       ...(config.plugins || [])
-    ]
-    const shouldExtract = options.extract
-    const shouldInject = options.inject
+    ];
+    const shouldExtract = options.extract;
+    const shouldInject = options.inject;
 
-    const modulesExported = {}
-    const autoModules = options.autoModules !== false && isModuleFile(this.id)
-    const supportModules = options.modules || autoModules
+    const modulesExported = {};
+    const autoModules = options.autoModules !== false && isModuleFile(this.id);
+    const supportModules = options.modules || autoModules;
     if (supportModules) {
       plugins.push(
         require('postcss-modules')({
@@ -110,35 +109,35 @@ export default {
           { inline: false, annotation: false } :
           { inline: true, annotation: false } :
         false
-    }
-    delete postcssOpts.plugins
+    };
+    delete postcssOpts.plugins;
 
-    postcssOpts.parser = ensurePostCSSOption(postcssOpts.parser)
-    postcssOpts.syntax = ensurePostCSSOption(postcssOpts.syntax)
-    postcssOpts.stringifier = ensurePostCSSOption(postcssOpts.stringifier)
+    postcssOpts.parser = ensurePostCSSOption(postcssOpts.parser);
+    postcssOpts.syntax = ensurePostCSSOption(postcssOpts.syntax);
+    postcssOpts.stringifier = ensurePostCSSOption(postcssOpts.stringifier);
 
     if (map && postcssOpts.map) {
       postcssOpts.map.prev = typeof map === 'string' ? JSON.parse(map) : map
     }
 
-    const res = await postcss(plugins).process(code, postcssOpts)
-    const outputMap = res.map && JSON.parse(res.map.toString())
+    const res = await postcss(plugins).process(code, postcssOpts);
+    const outputMap = res.map && JSON.parse(res.map.toString());
     if (outputMap && outputMap.sources) {
       outputMap.sources = outputMap.sources.map(v => normalizePath(v))
     }
 
-    let output = ''
-    let extracted
+    let output = '';
+    let extracted;
 
     if (options.namedExports) {
-      const json = modulesExported[this.id]
+      const json = modulesExported[this.id];
       const getClassName =
         typeof options.namedExports === 'function' ?
           options.namedExports :
-          ensureClassName
+          ensureClassName;
       // eslint-disable-next-line guard-for-in
       for (const name in json) {
-        const newName = getClassName(name)
+        const newName = getClassName(name);
         // Log transformed class names
         // But skip this when namedExports is a function
         // Since a user like you can manually log that if you want
@@ -155,7 +154,7 @@ export default {
     }
 
     if (shouldExtract) {
-      output += `export default ${JSON.stringify(modulesExported[this.id])};`
+      output += `export default ${JSON.stringify(modulesExported[this.id])};`;
       extracted = {
         id: this.id,
         code: res.css,

@@ -1,28 +1,27 @@
 import path from 'path'
 import pify from 'pify'
 import resolve from 'resolve'
-import importCwd from 'import-cwd'
 import PQueue from 'p-queue'
 
 // This queue makes sure node-sass leaves one thread available for executing fs tasks
 // See: https://github.com/sass/node-sass/issues/857
-const threadPoolSize = process.env.UV_THREADPOOL_SIZE || 4
-const workQueue = new PQueue({ concurrency: threadPoolSize - 1 })
+const threadPoolSize = process.env.UV_THREADPOOL_SIZE || 4;
+const workQueue = new PQueue({ concurrency: threadPoolSize - 1 });
 
-const moduleRe = /^~([a-z0-9]|@).+/i
+const moduleRe = /^~([a-z0-9]|@).+/i;
 
 const getUrlOfPartial = url => {
-  const parsedUrl = path.parse(url)
+  const parsedUrl = path.parse(url);
   return `${parsedUrl.dir}${path.sep}_${parsedUrl.base}`
-}
+};
 
-const resolvePromise = pify(resolve)
+const resolvePromise = pify(resolve);
 
 export default {
   name: 'sass',
   test: /\.s[ac]ss$/,
   async process({ code }) {
-    const sass = importCwd('node-sass')
+    const sass = require('node-sass');
 
     return new Promise((resolve, reject) => {
       workQueue.add(() =>
@@ -34,26 +33,26 @@ export default {
           sourceMap: this.sourceMap,
           importer: [
             (url, importer, done) => {
-              if (!moduleRe.test(url)) return done({ file: url })
+              if (!moduleRe.test(url)) return done({ file: url });
 
-              const moduleUrl = url.slice(1)
-              const partialUrl = getUrlOfPartial(moduleUrl)
+              const moduleUrl = url.slice(1);
+              const partialUrl = getUrlOfPartial(moduleUrl);
 
               const options = {
                 basedir: path.dirname(importer),
                 extensions: ['.scss', '.sass', '.css']
-              }
+              };
               const finishImport = id => {
                 done({
                   // Do not add `.css` extension in order to inline the file
                   file: id.endsWith('.css') ? id.replace(/\.css$/, '') : id
                 })
-              }
+              };
 
               const next = () => {
                 // Catch all resolving errors, return the original file and pass responsibility back to other custom importers
                 done({ file: url })
-              }
+              };
 
               // Give precedence to importing a partial
               resolvePromise(partialUrl, options)

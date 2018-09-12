@@ -10,7 +10,7 @@ const matchFile = (filepath, condition) => {
     return condition(filepath)
   }
   return condition && condition.test(filepath)
-}
+};
 
 export default class Loaders {
   constructor(options = {}) {
@@ -22,32 +22,32 @@ export default class Loaders {
         return rule
       }
       throw new TypeError('The rule in `use` option must be string or Array!')
-    })
-    this.loaders = []
+    });
+    this.loaders = [];
 
-    const extensions = options.extensions || ['.css', '.sss', '.pcss']
+    const extensions = options.extensions || ['.css', '.sss', '.pcss'];
     postcssLoader.test = filepath =>
-      extensions.some(ext => path.extname(filepath) === ext)
-    this.registerLoader(postcssLoader)
-    this.registerLoader(sassLoader)
-    this.registerLoader(stylusLoader)
-    this.registerLoader(lessLoader)
+      extensions.some(ext => path.extname(filepath) === ext);
+    this.registerLoader(postcssLoader);
+    this.registerLoader(sassLoader);
+    this.registerLoader(stylusLoader);
+    this.registerLoader(lessLoader);
     if (options.loaders) {
       options.loaders.forEach(loader => this.registerLoader(loader))
     }
   }
 
   registerLoader(loader) {
-    const existing = this.getLoader(loader.name)
+    const existing = this.getLoader(loader.name);
     if (existing) {
       this.removeLoader(loader.name)
     }
-    this.loaders.push(loader)
+    this.loaders.push(loader);
     return this
   }
 
   removeLoader(name) {
-    this.loaders = this.loaders.filter(loader => loader.name !== name)
+    this.loaders = this.loaders.filter(loader => loader.name !== name);
     return this
   }
 
@@ -59,13 +59,13 @@ export default class Loaders {
 
   process({ code, map, id, sourceMap, scoped }) {
     return series(this.use.slice().reverse().map(([name, options]) => {
-      const loader = this.getLoader(name)
+      const loader = this.getLoader(name);
       const loaderContext = {
         options: options || {},
         id,
         sourceMap,
         scoped
-      }
+      };
       return v => {
         if (loader.alwaysProcess || matchFile(id, loader.test)) {
           return loader.process.call(loaderContext, v)
